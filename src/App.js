@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { nanoid } from "nanoid";
+import { useState } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+import * as actions from "./redax/actions";
 
 import ContactForm from "./Components/ContactForm";
 import Filter from "./Components/Filter";
@@ -9,22 +11,12 @@ import ContactsListItem from "./Components/ContactsListItem";
 import "./App.scss";
 
 const App = () => {
-  const [contacts, setContacts] = useState([]);
-  const [filter, setFilter] = useState("");
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
 
-  const propsId = nanoid();
-
-  useEffect(() => {
-    if (window.localStorage.getItem("contacts")?.length > 0) {
-      setContacts(JSON.parse(window.localStorage.getItem("contacts")));
-    }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("contacts", JSON.stringify(contacts));
-  }, [contacts]);
+  const contacts = useSelector((state) => state.contacts.items);
+  const filter = useSelector((state) => state.contacts.filter);
+  const dispatch = useDispatch();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -36,7 +28,7 @@ const App = () => {
         setNumber(value);
         break;
       case "Find contacts by name":
-        setFilter(value);
+        dispatch(actions.filterContacts(value));
         break;
       default:
         return;
@@ -52,7 +44,8 @@ const App = () => {
       return;
     }
 
-    setContacts((prevState) => [...prevState, { id: propsId, name, number }]);
+    dispatch(actions.addContact({ name, number }));
+
     reset();
   };
 
@@ -62,8 +55,7 @@ const App = () => {
   };
 
   const deleteHandler = (contactId) => {
-    const delContact = contacts.filter((contact) => contact.id !== contactId);
-    setContacts(delContact);
+    dispatch(actions.deleteContact(contactId));
   };
 
   const handleFilter = () => {
